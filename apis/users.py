@@ -10,15 +10,25 @@ router = APIRouter()
 # CREATE USER
 @router.post("/")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    existing_user = db.query(User).filter(User.email == user.email).first()
-    if not existing_user:
-        new_user = User(**user.model_dump())
-        db.add(new_user)
-        db.commit()
-        db.refresh(new_user)
-        return new_user
-    else:
-        return "Email id is already registered"
+
+    
+    existing_email = db.query(User).filter(User.email == user.email).first()
+    if existing_email:
+        return { "Email id is already registered"}
+
+    if user.mobile:
+        existing_mobile = db.query(User).filter(User.mobile == user.mobile).first()
+        if existing_mobile:
+            return {"error": "Mobile number already registered"}
+
+    new_user = User(**user.model_dump())
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    
+    return {"User created successfully": new_user}
+
+
 
 
 # GET USER BY ID
