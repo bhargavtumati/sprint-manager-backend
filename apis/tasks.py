@@ -65,7 +65,7 @@ def get_all_tasks(db: Session = Depends(get_db)):
     return db.query(Task).all()
 
 # UPDATE TASK
-@router.put("/{id}")
+@router.patch("/{id}")
 def update_task(id: int, task: TaskUpdate, db: Session = Depends(get_db)):
     db_task = db.query(Task).filter(Task.id == id).first()
 

@@ -22,7 +22,7 @@ class Task(Base):
     story_points = Column(Integer, nullable=True)
     priority = Column(Enum(*Priority, name="status_enum"), nullable=True)
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
-    sub_task =   Column(Integer, ForeignKey("task.id"), nullable=True)
+    parent_task =   Column(Integer, ForeignKey("task.id"), nullable=True)
 
     sprint_id = Column(Integer, ForeignKey ("sprint.id"), nullable=False)
     project_id = Column(Integer, ForeignKey("project.id"), nullable=False)
