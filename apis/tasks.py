@@ -69,6 +69,15 @@ def get_task(id: int, db: Session = Depends(get_db)):
 
     return task
 
+@router.get("/")
+def get_all_tasks_sprint(db:Session=Depends(get_db)):
+    
+    sprint=db.query(Sprint).filter(Sprint.status==True).first()
+    tasks=db.query(Task).filter(Task.sprint_id==sprint.id)
+    if not tasks:
+        raise HTTPException(status_code=404, detail="Tasks not found")
+    return  tasks 
+
 @router.get("/{id}")
 def get_all_task_user_sprint(id:int,db:Session=Depends(get_db)):
     task=db.query(Task).filter(Task.id==id),
@@ -77,6 +86,16 @@ def get_all_task_user_sprint(id:int,db:Session=Depends(get_db)):
         raise HTTPException(status_code=404, detail="Task not found")
 
     return  task ,sprint
+
+@router.get("/{user_id}")
+def filter_tasks_per_sprint(user_id:int,db:Session=Depends(get_db)):
+
+    tasks=db.query(Task).filter(Task.user_id==user_id).all()
+    
+    if not Task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    return  tasks
 
 # UPDATE TASK
 @router.patch("/{id}")
