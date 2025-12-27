@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from pydantic import BaseModel, field_validator
 
 class UserCreate(BaseModel):
@@ -34,7 +33,7 @@ class UserUpdate(BaseModel):
     full_name: str | None = None
     email: str | None = None
     password: str | None = None
-    mobile: int | None = None
+    mobile: str | None = None
     role: str | None = None
     location: str | None = None
     organisation: str | None = None

@@ -16,3 +16,4 @@ class User(Base):
     location=Column(String,index=True, nullable=True)
     organisation=Column(String,index=True, nullable=True)
     projects = relationship("Project", secondary=user_projects, back_populates="users")
+    

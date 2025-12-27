@@ -10,11 +10,22 @@ router = APIRouter()
 
 # CREATE PROJECT
 @router.post("/")
-def create_project(project: ProjectCreate, db: Session = Depends(get_db)):
-    new_project = Project(**project.model_dump())
+def create_project(project_data: ProjectCreate, db: Session = Depends(get_db)):
+    # 1. Fetch existing User objects from the DB using the IDs provided
+    # project_data.users is a list of ints like [1, 2, 3]
+    users_to_add = db.query(User).filter(User.id.in_(project_data.users)).all()
+
+    # 2. Create the Project instance
+    new_project = Project(title=project_data.title)
+
+    # 3. Establish the relationship
+    # This automatically creates entries in the 'user_projects' table
+    new_project.users = users_to_add
+
     db.add(new_project)
     db.commit()
     db.refresh(new_project)
+    
     return new_project
 
 # Get all projects
