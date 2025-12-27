@@ -24,7 +24,7 @@ class Task(Base):
     user_id = Column(Integer, ForeignKey("user.id"), nullable=True)
     parent_task =   Column(Integer, ForeignKey("task.id"), nullable=True)
 
-    sprint_id = Column(Integer, ForeignKey ("sprint.id"), nullable=False)
+    sprint_id = Column(Integer, ForeignKey ("sprint.id"), nullable=True)
     project_id = Column(Integer, ForeignKey("project.id"), nullable=False)
 
     description = Column(Text, nullable=True)
