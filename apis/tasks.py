@@ -176,4 +176,23 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     return {"detail": "Task deleted successfully"}
 
 
+# 🔍 SEARCH TASKS
+@router.get("/search/ByTitle")
+def search_tasks(
+    q: str = Query(..., description="Task title"),
+    db: Session = Depends(get_db)
+):
+    search_text = validate_search_query(q)  # ✅ validation used here
+
+    tasks = (
+        db.query(Task)
+        .filter(Task.title.ilike(f"%{search_text}%"))
+        .all()
+    )
+    if len(tasks):
+        return tasks
+    else:
+        return "No task is found with your search!"
+
+
 
