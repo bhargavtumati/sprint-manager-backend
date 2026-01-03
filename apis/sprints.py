@@ -1,3 +1,4 @@
+from datetime import date
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
@@ -9,7 +10,7 @@ from apis.schemas.sprint import SprintCreate, SprintUpdate
 
 router = APIRouter()
 
-
+SPRINT_NOT_FOUND = "Sprint not found"
 # CREATE SPRINT
 
 @router.post("/")
@@ -59,7 +60,7 @@ def get_sprint(sprint_id: int, db: Session = Depends(get_db)):
     sprint = db.query(Sprint).filter(Sprint.id == sprint_id).first()
 
     if not sprint:
-        raise HTTPException(status_code=404, detail="Sprint not found")
+        raise HTTPException(status_code=404, detail=SPRINT_NOT_FOUND)
 
     return sprint
 
@@ -84,6 +85,17 @@ def update_sprint(sprint_id: int, sprint: SprintUpdate, db: Session = Depends(ge
     db.refresh(db_sprint)
     return db_sprint
 
+@router.patch("/{sprint_id}")
+def end_sprint(sprint_id: int, db: Session = Depends(get_db)):
+    sprint = db.query(Sprint).filter(Sprint.id == sprint_id).first()
+
+    if not sprint:
+        raise HTTPException(status_code=404, detail=SPRINT_NOT_FOUND)
+    
+    sprint.status = False
+    sprint.end_date = date.today()
+    db.commit()
+    return {"message": "Sprint deleted successfully"}
 
 # DELETE SPRINT
 @router.delete("/{sprint_id}")
@@ -91,7 +103,7 @@ def delete_sprint(sprint_id: int, db: Session = Depends(get_db)):
     sprint = db.query(Sprint).filter(Sprint.id == sprint_id).first()
 
     if not sprint:
-        raise HTTPException(status_code=404, detail="Sprint not found")
+        raise HTTPException(status_code=404, detail=SPRINT_NOT_FOUND)
 
     db.delete(sprint)
     db.commit()
