@@ -8,6 +8,7 @@ from typing import Optional
 
 from apis.ai import send_task_to_gemini
 from apis.schemas.task import TaskCreate, TaskUpdate
+from apis.schemas.task import validate_search_query
 
 
 router = APIRouter()
@@ -168,3 +169,25 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.delete(task)
     db.commit()
     return {"detail": "Task deleted successfully"}
+
+
+# 🔍 SEARCH TASKS
+@router.get("/search/ByTitle")
+def search_tasks(
+    q: str = Query(..., description="Task title"),
+    db: Session = Depends(get_db)
+):
+    search_text = validate_search_query(q)  # ✅ validation used here
+
+    tasks = (
+        db.query(Task)
+        .filter(Task.title.ilike(f"%{search_text}%"))
+        .all()
+    )
+    if len(tasks):
+        return tasks
+    else:
+        return "No task is found with your search!"
+
+
+
