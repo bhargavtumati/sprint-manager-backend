@@ -13,7 +13,8 @@ from apis.schemas.task import validate_search_query
 router = APIRouter()
 
 
-
+NO_DESCRIPTION_GENERATED = "No description generated"
+TASK_NOT_FOUND = "Task not found"
 
 @router.post("/")
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):\
@@ -21,7 +22,6 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):\
     # Find last code
     last_task = db.query(Task).order_by(Task.code.desc()).first()
     new_code = int(last_task.code) + 1 if last_task else 1001
-
 
     # Create Task instance with code
     new_task = Task(
@@ -40,10 +40,10 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):\
     )
     if not new_task.description:
         try:
-            prompt=f"generate a description on how to the task in our project in points,make sure length of description is not more than 1000 characters{new_task.title }"
+            prompt=f"generate a description on how to do the {new_task.title } task in our project in points, make sure length of description is not more than 1000 characters"
             request = PromptRequest(prompt=prompt)
             result = send_task_to_gemini(request)
-            new_task.description = result.get("result", "No description generated")
+            new_task.description = result.get("result", NO_DESCRIPTION_GENERATED)
        
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Error generating description: {str(e)}")
@@ -52,12 +52,10 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):\
     db.commit()
     db.refresh(new_task)
     
-
     return {
         "task": new_task
        
     }
-
 
 
 # GET TASK BY ID
@@ -66,9 +64,10 @@ def get_task(task_id: int, db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail=TASK_NOT_FOUND)
 
     return task
+
 
 @router.get("/sprint/{sprint_id}")
 def get_all_tasks_for_sprint_id(sprint_id: int, db:Session=Depends(get_db)):
@@ -92,16 +91,24 @@ def get_all_tasks_for_project_id(project_id: int, db:Session=Depends(get_db)):
     return  tasks 
 
 
-@router.get("/user/{user_id}")
-def get_all_task_for_user_sprint(user_id:int,db:Session=Depends(get_db)):
-    sprint=db.query(Sprint).filter(Sprint.status==True).first()
+@router.get("/{sprint_id}/user/{user_id}")
+def get_all_task_for_user_sprint(user_id:int, sprint_id:int, db:Session=Depends(get_db)):
+    sprint=db.query(Sprint).filter(Sprint.id==sprint_id).first()
     if not sprint:
         return []
-    task=[]
-    task=db.query(Task).filter(Task.user_id==user_id).all()
+    tasks=[]
+    tasks=db.query(Task).filter(Task.user_id==user_id, Task.sprint_id==sprint.id).all()
 
-    return  task 
+    return  tasks 
 
+
+@router.get("/user/{user_id}")
+def get_all_task_for_user_backlog(user_id:int,  db:Session=Depends(get_db)):
+    
+    tasks=[]
+    tasks=db.query(Task).filter(Task.user_id==user_id, Task.sprint_id==None).all()
+
+    return  tasks 
 
 
 # UPDATE TASK
@@ -110,7 +117,7 @@ def update_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
     db_task = db.query(Task).filter(Task.id == task_id).first()
 
     if not db_task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail=TASK_NOT_FOUND)
     
     for key, value in task.model_dump(exclude_unset=True).items():
         setattr(db_task, key, value)
@@ -120,7 +127,7 @@ def update_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
             prompt=f"generate a description specifying the points in general {db_task.title}"
             request = PromptRequest(prompt=prompt)
             result = send_task_to_gemini(request)
-            db_task.description = result.get("result", "No description generated")
+            db_task.description = result.get("result", NO_DESCRIPTION_GENERATED)
        
         except Exception as e:
             raise HTTPException(status_code=404, detail=f"Error generating description: {str(e)}")
@@ -130,18 +137,20 @@ def update_task(task_id: int, task: TaskUpdate, db: Session = Depends(get_db)):
     return db_task
 
 
+
+
 # UPDATE DESCRIPTION
 @router.patch("/{task_id}/description")
-def update_description(task_id: int, db: Session = Depends(get_db)):
+def update_description(task_id: int, req: PromptRequest, db: Session = Depends(get_db)):
     db_task = db.query(Task).filter(Task.id == task_id).first()
     if not db_task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail=TASK_NOT_FOUND)
 
     try:
-        prompt=f"generate a description specifying the points in general {db_task.title}"
+        prompt=req.prompt
         request = PromptRequest(prompt=prompt)
         result = send_task_to_gemini(request)
-        description = result.get("result", "No description generated")
+        description = result.get("result", NO_DESCRIPTION_GENERATED)
        
     except Exception as e:
         description = f"Error generating description: {str(e)}"
@@ -160,27 +169,11 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
 
     if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
+        raise HTTPException(status_code=404, detail=TASK_NOT_FOUND)
 
     db.delete(task)
     db.commit()
     return {"detail": "Task deleted successfully"}
-#get the task based on title
-@router.get("/byTitle/search")
-def search_tasks(
-    q: str = Query(..., min_length=1),
-    db: Session = Depends(get_db)):
-    search_text=validate_search_query
-    tasks = (
-        db.query(Task)
-        .filter(Task.title.ilike(f"%{search_text}%"))  # 🔥 case-insensitive
-        .all()
-    )
-    return tasks if len(tasks) > 0 else {"message": "No task found with your search"}
-
-
-
-
 
 
 
