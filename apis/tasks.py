@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models.task import Task
+from fastapi import Query
 from models.sprint import Sprint
 from apis.schemas.ai import PromptRequest 
 from typing import Optional

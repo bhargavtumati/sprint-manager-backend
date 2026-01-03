@@ -4,6 +4,7 @@ from apis.tasks import router as task_router
 from apis.projects import router as project_router
 from apis.users import router as user_router
 from apis.sprints import router as sprint_router
+from apis.search_bar import router as search_router
 from fastapi.middleware.cors import CORSMiddleware
 from apis.ai import router as ai_router
 
@@ -33,3 +34,4 @@ app.include_router(project_router, prefix="/projects", tags=["Projects"])
 app.include_router(user_router, prefix="/users", tags=["Users"])
 app.include_router(sprint_router, prefix="/sprints", tags=["Sprints"])
 app.include_router(ai_router,prefix="/ai",tags=["Ai"])
+app.include_router(search_router,prefix="/search_bar",tags=["Search"])
