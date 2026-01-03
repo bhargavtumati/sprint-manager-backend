@@ -7,6 +7,7 @@ from apis.schemas.ai import PromptRequest
 
 from apis.ai import send_task_to_gemini
 from apis.schemas.task import TaskCreate, TaskUpdate
+from apis.schemas.task import validate_search_query
 
 
 router = APIRouter()
@@ -164,6 +165,22 @@ def delete_task(task_id: int, db: Session = Depends(get_db)):
     db.delete(task)
     db.commit()
     return {"detail": "Task deleted successfully"}
+#get the task based on title
+@router.get("/byTitle/search")
+def search_tasks(
+    q: str = Query(..., min_length=1),
+    db: Session = Depends(get_db)):
+    search_text=validate_search_query
+    tasks = (
+        db.query(Task)
+        .filter(Task.title.ilike(f"%{search_text}%"))  # 🔥 case-insensitive
+        .all()
+    )
+    return tasks if len(tasks) > 0 else {"message": "No task found with your search"}
+
+
+
+
 
 
 

@@ -51,3 +51,23 @@ class TaskUpdate(BaseModel):
     sprint_id: int | None = None
     project_id: int | None = None
     priority: Priority | None = None
+
+    # validators/task.py
+from fastapi import HTTPException, status
+
+def validate_search_query(q: str) -> str:
+    search_text = q.strip()
+
+    if not search_text:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Search query cannot be empty"
+        )
+
+    if len(search_text) > 50:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Search query is too long"
+        )
+
+    return search_text
