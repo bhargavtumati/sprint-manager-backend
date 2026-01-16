@@ -93,7 +93,6 @@ def get_unassigned_tasks(
     if user_id is not None:
         query = query.filter(Task.user_id == user_id, Task.sprint_id.is_(None))
          
-
     elif sprint_id is not None:
         query = query.filter(Task.sprint_id == sprint_id, Task.user_id.is_(None))
 
@@ -101,9 +100,6 @@ def get_unassigned_tasks(
         query = query.filter(Task.user_id.is_(None), Task.sprint_id.is_(None))
 
     return query.all()
-
-
-
 
 
 # GET TASK BY ID
