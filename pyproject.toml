@@ -1,25 +1,24 @@
-
-
-
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
-
 [project]
-name = "my-app"
+name = "sprint-manager-backend"
 version = "0.1.0"
+description = "Sprint Manager Backend"
+requires-python = ">=3.11,<3.13"
+# All your dependencies MUST be here for Vercel/uv to see them
 dependencies = [
     "requests>=2.31.0",
+    "fastapi>=0.122.0,<0.123.0",
+    "uvicorn>=0.38.0,<0.39.0",
+    "sqlalchemy>=2.0.44,<3.0.0",
+    "google>=3.0.0,<4.0.0",
+    "google-generativeai>=0.8.5,<0.9.0",
+    "python-dotenv>=1.2.1,<2.0.0",
+    "psycopg2-binary>=2.9.11,<3.0.0",
 ]
-requires-python = ">=3.11"
 
+[tool.poetry]
+# This line is the "Silver Bullet" to stop the build_editable error
+package-mode = false 
 
-[tool.poetry.dependencies]
-python = ">=3.11,<3.13"
-fastapi = ">=0.122.0,<0.123.0"
-uvicorn = ">=0.38.0,<0.39.0"
-sqlalchemy = ">=2.0.44,<3.0.0"
-google = ">=3.0.0,<4.0.0"
-google-generativeai = ">=0.8.5,<0.9.0"
-python-dotenv = ">=1.2.1,<2.0.0"
-psycopg2-binary = ">=2.9.11,<3.0.0"
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
