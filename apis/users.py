@@ -59,14 +59,30 @@ def get_users_by_project(project_id: int, db: Session = Depends(get_db), ):
 
 
 @router.get("/assignproject/{organisation}")  
-def get_users_by_organisation_project(organisation: str, project_id: int, db: Session = Depends(get_db), ):
+def get_users_not_in_project(organisation: str, project_id: int, db: Session = Depends(get_db), ):
     
-        return db.query(User).join(User.projects).filter(User.organisation == organisation, Project.id != project_id).all()
+        return (
+        db.query(User)
+        .filter(
+            User.organisation == organisation,
+            # This selects users who DO NOT have a project with this ID
+            ~User.projects.any(Project.id == project_id)
+        )
+        .all()
+    )
    
 @router.get("/unassignproject/{organisation}")  
-def get_users_by_organisation_project(organisation: str, project_id: int, db: Session = Depends(get_db), ):
+def get_users_in_project(organisation: str, project_id: int, db: Session = Depends(get_db), ):
     
-        return db.query(User).join(User.projects).filter(User.organisation == organisation, Project.id == project_id).all()
+       return (
+        db.query(User)
+        .join(User.projects) # Connects the User table to the Projects table
+        .filter(
+            User.organisation == organisation,
+            Project.id == project_id # Filters for specifically this project
+        )
+        .all()
+    )
 
 # GET USER BY ID
 @router.get("/{user_id}")
